@@ -3,10 +3,8 @@
 	Spraytag System (Re-coded by 0x1E4)
 	------------------------------------
 		It same like this -> https://forum.sa-mp.com/showthread.php?t=499642
-		I just recode some parts.
-		But basicly it's the same system and same object.
-
-		But my method maybe dfferent if you compare my script to that one.
+		I just recode some parts and it's the same system and same object,
+		But my method can be different if you compare my script to that.
 
 		Oh, this is under development and not finished YET!!
 		You can see on /releases if you want to download a lastest release.
