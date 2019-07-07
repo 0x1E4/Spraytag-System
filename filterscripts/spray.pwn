@@ -11,7 +11,7 @@
 
 		Note:
 			- Do not download it on main page!!, just head over to /release and download it from there!
-			- You can change owner name with MySQL player id if you have some.
+			- You can change owner name with MySQL player.
 			- You can merge this script with your own gamemode.
 			- You cannot sell it, because it's free!!!.
 			- Use issues page if you found a bug.
