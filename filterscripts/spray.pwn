@@ -339,6 +339,7 @@ try ReloadTags(e)
 
 		SetDynamicObjectMaterial(SprayData[e][sprayObject], 0, 0, "none", "none", 0);
 		SetDynamicObjectMaterialText(SprayData[e][sprayObject], 0, SprayData[e][sprayText], OBJECT_MATERIAL_SIZE_512x512, SprayData[e][sprayFontN], SprayData[e][sprayFontS], SprayData[e][sprayFontB], SprayData[e][sprayColor], 0, 0);
+                Streamer_Update(playerid, STREAMER_TYPE_OBJECT);
 	}
 	return 1;
 }
