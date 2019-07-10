@@ -13,7 +13,6 @@
 			- Do not download it on main page!!, just head over to /release and download it from there!
 			- You can change owner name with MySQL player.
 			- You can merge this script with your own gamemode.
-			- You cannot sell it, because it's free!!!.
 			- Use issues page if you found a bug.
 
 	Thank you and enjoy :)
@@ -25,16 +24,23 @@
 		A: Nope, EasyDialog make much easier for me to read all dialog route
 
 		Q: I think is not different between the old one with this one.
-		A: Yea, i just make make that crappy code to be clean like this :)
+		A: Yeah i know, i just create with my version :)
 
-		Q: Why using MySQL stuff, you can use DoF2 or Dini/Y_INI.
-		A: Because with MySQL, everything is much easier storing any data and get stuff with ID.
+		Q: Why using MySQL as database, you can use DoF2 or Dini/Y_INI.
+		A: Because with MySQL, everything is much easier storing any data.
 
 		Q: What different between i-zcmd and zcmd?
 		A: i-zcmd means improvement zeex command made by Gammix, and he claims that i-zcmd is much faster than old ones.
 
 		Q: can i sell it?
 		A: No, you can't sell this script to other people.
+
+		Q: Do you planning to make Dini/Y_INI version?
+		A: Yes
+
+		Q: Why you not add some animation after player clicking "Create Tags" ?
+		A: Hmm, i didn't plan to putting any animation first, because i want to focus fixing bug.
+		   But of course i will make two version at begining release.
 
 	------------------------------------
 	Things to you understand the system:
@@ -79,7 +85,8 @@
 		- 1001font & dafont for all font stuff made by a person who can't i write this one by one :(
 */
 
-#define FILTERSCRIPT
+//#define FILTERSCRIPT
+#define USE_DEBUG_LINE
 
 #include <a_samp>
 
@@ -102,6 +109,7 @@
 
 //#define TAG_DISTANCE (200.00)
 #define MAX_SPRAY (500) //5 * 100 players = 500
+#define MAX_PLAYER_SPRAY (5) 
 
 #define Message SendClientMessage
 #define try%0(%1) forward%0(%1); public%0(%1)
@@ -167,6 +175,7 @@ new MySQL:DataBinding;
 		SetPlayerFacingAngle(playerid, 270.0);
 		SetPlayerCameraPos(playerid,256.0815,-43.0475,1004.0234);
 		SetPlayerCameraLookAt(playerid,258.4893,-41.4008,1002.0234);
+		Streamer_Update(playerid);
 	}
 
 	public OnPlayerRequestClass(playerid, classid)
@@ -183,6 +192,7 @@ new MySQL:DataBinding;
 		AllowAdminTeleport(1);
 
 		Loading();
+		mysql_log(ERROR | WARNING);
 
 		AddPlayerClass(265,1958.3783,1343.1572,15.3746,270.1425,0,0,0,0,-1,-1);
 
@@ -244,11 +254,15 @@ public OnPlayerEditDynamicObject(playerid, objectid, response, Float:x, Float:y,
 
 		ReloadTags(EditMode[playerid][holdingID]);
 		SaveTags(EditMode[playerid][holdingID]);
+
+		Streamer_Update(playerid);
 	}
 	if (response == EDIT_RESPONSE_FINAL || response == EDIT_RESPONSE_CANCEL)
 	{
-		if(EditMode[playerid][holdingID] != -1)
+		if(EditMode[playerid][holdingID] != -1) {
 			ReloadTags(EditMode[playerid][holdingID]);
+			Streamer_Update(playerid);
+		}
 
 		EditMode[playerid][holdingID] = -1;
 	}
@@ -271,7 +285,7 @@ try Loading()
 		print(".........................");
 
 		#if !defined FILTERSCRIPT
-			SetTimer("Shutdown", 2000, false);
+			SetTimer("Shutdown", 1500, false);
 		#endif
 
 		return 1;
@@ -307,11 +321,11 @@ try LoadTags()
 		SprayData[i][sprayExists] = true;
 		cache_get_value_name_int(i, "sID", SprayData[i][sprayID]);
 
-		cache_get_value_name(i, "sText", SprayData[i][sprayText]);
-		cache_get_value_name(i, "sOwner", SprayData[i][sprayOwner]);
+		cache_get_value_name(i, "sText", SprayData[i][sprayText], 32);
+		cache_get_value_name(i, "sOwner", SprayData[i][sprayOwner], MAX_PLAYER_NAME);
+		cache_get_value_name(i, "sFontName", SprayData[i][sprayFontN], 24);
 
 		cache_get_value_name_int(i, "sColor", SprayData[i][sprayColor]);
-		cache_get_value_name_int(i, "sFontName", SprayData[i][sprayFontN]);
 		cache_get_value_name_int(i, "sFontSize", SprayData[i][sprayFontS]);
 		cache_get_value_name_int(i, "sFontBold", SprayData[i][sprayFontB]);
 
@@ -319,7 +333,31 @@ try LoadTags()
 		cache_get_value_name_float(i, "sPosY", SprayData[i][sprayPosY]);
 		cache_get_value_name_float(i, "sPosZ", SprayData[i][sprayPosZ]);
 		cache_get_value_name_float(i, "sRot", SprayData[i][sprayRot]);
-
+		#if defined USE_DEBUG_LINE
+			printf("[Debug Line] LoadTags() {\n   SprayID:%d\n   \
+				SprayText:%s\n   \
+				SprayOwner:%s\n   \
+				SprayFontN:%s\n   \
+				SprayColor:%d\n   \
+				SprayFontSize:%d\n   \
+				SprayFontBold:%d\n   \
+				SprayPosX:%f\n   \
+				SprayPosY:%f\n   \
+				SprayPosZ:%f\n   \
+				SprayRot:%f\n    \
+			}",
+			SprayData[i][sprayID], 
+			SprayData[i][sprayText],
+			SprayData[i][sprayOwner],
+			SprayData[i][sprayFontN],
+			SprayData[i][sprayColor],
+			SprayData[i][sprayFontS],
+			SprayData[i][sprayFontB],
+			SprayData[i][sprayPosX],
+			SprayData[i][sprayPosY],
+			SprayData[i][sprayPosZ],
+			SprayData[i][sprayRot]);
+		#endif
 		counat++;
 		ReloadTags(i);
 	}
@@ -335,12 +373,12 @@ try ReloadTags(e)
 		if (IsValidDynamicObject(SprayData[e][sprayObject]))
 			DestroyDynamicObject(SprayData[e][sprayObject]);
 	
-		SprayData[e][sprayObject] = CreateDynamicObject(19482, SprayData[e][sprayPosX], SprayData[e][sprayPosY], SprayData[e][sprayPosZ], 0.0, 0.0, SprayData[e][sprayRot]);
+		SprayData[e][sprayObject] = CreateDynamicObject(19353, SprayData[e][sprayPosX], SprayData[e][sprayPosY], SprayData[e][sprayPosZ], 0.0, 0.0, SprayData[e][sprayRot]);
 
 		SetDynamicObjectMaterial(SprayData[e][sprayObject], 0, 0, "none", "none", 0);
-		SetDynamicObjectMaterialText(SprayData[e][sprayObject], 0, SprayData[e][sprayText], OBJECT_MATERIAL_SIZE_512x512, SprayData[e][sprayFontN], SprayData[e][sprayFontS], SprayData[e][sprayFontB], SprayData[e][sprayColor], 0, 0);
-                Streamer_Update(playerid, STREAMER_TYPE_OBJECT);
+		SetDynamicObjectMaterialText(SprayData[e][sprayObject], 0, SprayData[e][sprayText], OBJECT_MATERIAL_SIZE_512x512, SprayData[e][sprayFontN], SprayData[e][sprayFontS], SprayData[e][sprayFontB], SprayData[e][sprayColor], 0, 1);
 	}
+
 	return 1;
 }
 
@@ -361,7 +399,7 @@ try DeleteTags(e)
 	if (IsValidDynamicObject(SprayData[e][sprayObject]))
 		DestroyDynamicObject(SprayData[e][sprayObject]);
 	
-	Prepare(DataBinding, query, sizeof(query), "DELETE FROM `spaytags` WHERE `sID` = '%d'", SprayData[e][sprayID]);
+	Prepare(DataBinding, query, sizeof(query), "DELETE FROM `spraytags` WHERE `sID` = '%d'", SprayData[e][sprayID]);
 	
 	SprayData[e][sprayExists] = false;
 	SprayData[e][sprayID] = -1;
@@ -406,20 +444,28 @@ try ResetPreview(playerid)
 	DeletePVar(playerid, "idx_4");
 	DeletePVar(playerid, "idx_5");
 	DeletePVar(playerid, "TagSelection");
+	DeletePVar(playerid, "CurrentSelect");
+	DeletePVar(playerid, "FreeSlot");
+	DeletePVar(playerid, "MaxSlot");
+		
+
+	DeletePVar(playerid, "selected_menu");
+	DeletePVar(playerid, "edit_menu");
+
 
 	return 1;
 }
 
 try OnPreviewCheck(playerid)
 {
-	if (!strcmp(OnHandlingSpray[playerid][sprayText], "Exemplo", true) || !strcmp(OnHandlingSpray[playerid][sprayFontN], "null", true))
+	if (!strcmp(OnHandlingSpray[playerid][sprayText], "Exemplo", true))
 	{
-		Message(playerid, 0xFFFFFFAA, "Please fill either spray text/font name");
+		Message(playerid, 0xFFFFFFAA, "Please fill the font name");
 		Open_Dialog(playerid, TAG_CREATE);
 	}
-	else if (OnHandlingSpray[playerid][sprayFontS] == 0 || OnHandlingSpray[playerid][sprayColor] == 0)
+	else if (OnHandlingSpray[playerid][sprayFontS] == 0)
 	{
-		Message(playerid, 0xFFFFFFAA, "Please fill either text size/text color");
+		Message(playerid, 0xFFFFFFAA, "Please fill the text size");
 		Open_Dialog(playerid, TAG_CREATE);
 	}
 	else
@@ -455,7 +501,7 @@ Build_Table()
 			`sColor` VARCHAR(24) DEFAULT '-1', \
 			`sFontName` VARCHAR(24) DEFAULT 'Arial', \
 			`sFontSize` INT(12) DEFAULT '24', \
-			`sFontBold` INT(12) DEFAULT '1', \
+			`sFontBold` INT(12) DEFAULT '0', \
 			`sPosX` FLOAT DEFAULT NULL, \
 			`sPosY` FLOAT DEFAULT NULL, \
 			`sPosZ` FLOAT DEFAULT NULL, \
@@ -487,7 +533,7 @@ Open_Dialog(playerid, menu, tagid = -1)
 				SelectedColor(OnHandlingSpray[playerid][sprayColor]),
 				OnHandlingSpray[playerid][sprayFontN],
 				OnHandlingSpray[playerid][sprayFontS],
-				(!OnHandlingSpray[playerid][sprayFontB]) ? ("Normal") : ("Bold")
+				(!OnHandlingSpray[playerid][sprayFontB]) ? ("No") : ("Yes")
 			);
 			Dialog_Show(playerid, TagCreateMenu, DIALOG_STYLE_TABLIST_HEADERS, "Spraytag Editor - Crate Tag Menu", formattedtext, "Select", "Back");
 		}
@@ -505,7 +551,7 @@ Open_Dialog(playerid, menu, tagid = -1)
 				SelectedColor(SprayData[tagid][sprayColor]),
 				SprayData[tagid][sprayFontN],
 				SprayData[tagid][sprayFontS],
-				(!SprayData[tagid][sprayFontB]) ? ("Normal") : ("Bold")
+				(!SprayData[tagid][sprayFontB]) ? ("No") : ("Yes")
 			);
 			Dialog_Show(playerid, TagEditMenu, DIALOG_STYLE_TABLIST_HEADERS, "Spraytag Editor - Edit Tag Menu", formattedtext, "Select", "Back");
 		}
@@ -513,39 +559,58 @@ Open_Dialog(playerid, menu, tagid = -1)
 		{
 			new output[320],named[MAX_PLAYER_NAME], couz;
 			GetPlayerName(playerid, named, sizeof(named));
-			format(output, sizeof(output), "ID\tText\n");
 
 			for (new rx; rx < MAX_SPRAY; rx++) if (SprayData[rx][sprayExists] && !strcmp(SprayData[rx][sprayOwner], named, true))
 			{
 				new cache_output[12];
-
-				couz++;
-				format(output, sizeof(output), "%s %d\t%s\n", output, SprayData[rx][sprayID], SprayData[rx][sprayText]);
+				format(output, sizeof(output), "%s %s%s\n", output, SelectedColor(SprayData[rx][sprayColor], 1), SprayData[rx][sprayText]);
 				format(cache_output, sizeof(cache_output), "idx_%d", couz);
 				SetPVarInt(playerid, cache_output, rx);
+				couz++;
 			}
 
-			if (couz < 5 && (GetPVarInt(playerid, "TagSelection") == 1))
+			if (couz < MAX_PLAYER_SPRAY && (GetPVarInt(playerid, "TagSelection") == 1))
+			{
 				format(output, sizeof(output), "%s Create tag here!", output);
+				SetPVarInt(playerid, "FreeSlot", couz);
+			}
+			else if(couz == MAX_PLAYER_SPRAY)
+				SetPVarInt(playerid, "MaxSlot", 1);
 
-			Dialog_Show(playerid, TagsSelection, DIALOG_STYLE_TABLIST_HEADERS, "Spraytag Edit - Tag Selection menu", output, "Select", "Back");
+			Dialog_Show(playerid, TagsSelection, DIALOG_STYLE_LIST, "Spraytag Edit - Tag Selection menu", output, "Select", "Back");
 		}
 	}
 	return 1;
 }
 
-SelectedColor(colorhex)
+SelectedColor(colorhex, formatable = 0)
 {
 	new rase[64];
-	switch(colorhex)
+	if(formatable)
 	{
-		case -1: rase = "{FFFFFF}White";
-		case -65536: rase = "{FF0000}Red";
-		case -256: rase = "{FFFF00}Yellow";
-		case -13382605: rase = "{33CC33}Green";
-		case -13382401: rase = "{33CCFF}Light Blue";
-		case -23296: rase = "{FFA500}Orange";
-		case -1549353: rase = "{1394BF}Dark Blue";
+		switch(colorhex)
+		{
+			case -1: rase = "{FFFFFF}";
+			case -65536: rase = "{FF0000}";
+			case -256: rase = "{FFFF00}";
+			case -13382605: rase = "{33CC33}";
+			case -13382401: rase = "{33CCFF}";
+			case -23296: rase = "{FFA500}";
+			case -1549353: rase = "{1394BF}";
+		}
+	}
+	else 
+	{
+		switch(colorhex)
+		{
+			case -1: rase = "{FFFFFF}White";
+			case -65536: rase = "{FF0000}Red";
+			case -256: rase = "{FFFF00}Yellow";
+			case -13382605: rase = "{33CC33}Green";
+			case -13382401: rase = "{33CCFF}Light Blue";
+			case -23296: rase = "{FFA500}Orange";
+			case -1549353: rase = "{1394BF}Dark Blue";
+		}
 	}
 	return rase;
 }
@@ -649,7 +714,11 @@ Dialog:TagsMain(playerid, response, listitem, inputtext[])
 Dialog:TagsSelection(playerid, response, listitem, inputtext[])
 {
 	new pvarz[12];
-	if (!response) return Open_Dialog(playerid, TAG_MAIN);
+	if (!response) 
+	{
+		ResetPreview(playerid);
+		return Open_Dialog(playerid, TAG_MAIN);
+	}
 
 	if (!GetPVarInt(playerid, "CurrentSelect"))
 	{
@@ -660,7 +729,14 @@ Dialog:TagsSelection(playerid, response, listitem, inputtext[])
 
 	switch (GetPVarInt(playerid, "TagSelection"))
 	{
-		case 1: Open_Dialog(playerid, TAG_CREATE);
+		case 1: 
+		{
+			if((GetPVarInt(playerid, "FreeSlot") != listitem) && listitem == 0)
+				return Dialog_Show(playerid, AlertPlayer, DIALOG_STYLE_MSGBOX, "Warning!", "You cannot create tag on that slot!", "Back", "");
+			else if(GetPVarInt(playerid, "FreeSlot") != listitem || GetPVarInt(playerid, "MaxSlot"))
+				return Dialog_Show(playerid, AlertPlayer, DIALOG_STYLE_MSGBOX, "Warning!", "You cannot create tag on that slot!", "Back", "");
+			Open_Dialog(playerid, TAG_CREATE);	
+		}
 		case 2: Open_Dialog(playerid, TAG_EDIT, GetPVarInt(playerid, "CurrentSelect"));
 		case 3: Open_Dialog(playerid, TAG_DELETE);
 	}
@@ -678,6 +754,9 @@ Dialog:TagsDelete(playerid, response, listitem, inputtext[])
 	Open_Dialog(playerid, TAG_MAIN);
 	return 1;
 }
+
+Dialog:AlertPlayer(playerid, response, listitem, inputtext[])
+	return Open_Dialog(playerid, TAG_SELECTION);
 
 Dialog:TagCreateMenu(playerid, response, listitem, inputtext[])
 {
@@ -724,7 +803,7 @@ Dialog:TagEditMenu(playerid, response, listitem, inputtext[])
 
 Dialog:OnCreateResponz(playerid, response, listitem, inputtext[])
 {
-	if (!response && listitem != 4) return Open_Dialog(playerid, TAG_CREATE);
+	if (!response) return Open_Dialog(playerid, TAG_CREATE);
 
 	switch (GetPVarInt(playerid, "selected_menu"))
 	{
@@ -771,7 +850,8 @@ Dialog:OnCreateResponz(playerid, response, listitem, inputtext[])
 		}
 		case 3: 
 		{
-			if (!IsNumeric(inputtext)) return Dialog_Show(playerid, OnEditResponz, DIALOG_STYLE_INPUT, "Edit Spray Text Size", "Please type the size below on box\nto change the new text size", "Done", "Back"); 
+			if (!IsNumeric(inputtext)) 
+				return Dialog_Show(playerid, OnCreateResponz, DIALOG_STYLE_INPUT, "Edit Spray Text Size", "Please type the size below on box\nto change the new text size", "Done", "Back"); 
 			
 			OnHandlingSpray[playerid][sprayFontS] = strval(inputtext);
 			Message(playerid, 0xFFFFFFAA, "Successfully edited spray text size!");
@@ -779,16 +859,14 @@ Dialog:OnCreateResponz(playerid, response, listitem, inputtext[])
 		}
 		case 4:
 		{
-			if (!response && listitem == 4) 
+			if(OnHandlingSpray[playerid][sprayFontB])
 			{
 				OnHandlingSpray[playerid][sprayFontB] = 0;
-				Message(playerid, 0xFFFFFFAA, "Successfully edited spray text to normal!");
 				Open_Dialog(playerid, TAG_CREATE);
 			}
-			else 
+			else
 			{
 				OnHandlingSpray[playerid][sprayFontB] = 1;
-				Message(playerid, 0xFFFFFFAA, "Successfully edited spray text to bold!");
 				Open_Dialog(playerid, TAG_CREATE);
 			}
 		}
@@ -810,8 +888,9 @@ Dialog:OnEditResponz(playerid, response, listitem, inputtext[])
 			Message(playerid, 0xFFFFFFAA, "Successfully edited spray text!");
 
 			ReloadTags(sprayid);
-			SaveTags(sprayid);
+			Streamer_Update(playerid);
 
+			SaveTags(sprayid);
 			Open_Dialog(playerid, TAG_EDIT, sprayid);
 		}
 		case 1: 
@@ -842,8 +921,9 @@ Dialog:OnEditResponz(playerid, response, listitem, inputtext[])
 			Message(playerid, 0xFFFFFFAA, "Successfully edited spray color!");
 
 			ReloadTags(sprayid);
-			SaveTags(sprayid);
+			Streamer_Update(playerid);
 
+			SaveTags(sprayid);
 			Open_Dialog(playerid, TAG_EDIT, sprayid);
 		}
 		case 2: 
@@ -852,8 +932,9 @@ Dialog:OnEditResponz(playerid, response, listitem, inputtext[])
 			Message(playerid, 0xFFFFFFAA, "Successfully edited spray font!");
 
 			ReloadTags(sprayid);
-			SaveTags(sprayid);
+			Streamer_Update(playerid);
 
+			SaveTags(sprayid);
 			Open_Dialog(playerid, TAG_EDIT, sprayid);
 		}
 		case 3: 
@@ -864,30 +945,31 @@ Dialog:OnEditResponz(playerid, response, listitem, inputtext[])
 			Message(playerid, 0xFFFFFFAA, "Successfully edited spray text size!");
 
 			ReloadTags(sprayid);
-			SaveTags(sprayid);
+			Streamer_Update(playerid);
 
+			SaveTags(sprayid);
 			Open_Dialog(playerid, TAG_EDIT, sprayid);
 		}
 		case 4:
 		{
-			if (!response && listitem == 4) 
+			if(SprayData[sprayid][sprayFontB])
 			{
 				SprayData[sprayid][sprayFontB] = 0;
-				Message(playerid, 0xFFFFFFAA, "Successfully edited spray text to bold!");
 
 				ReloadTags(sprayid);
-				SaveTags(sprayid);
+				Streamer_Update(playerid);
 
+				SaveTags(sprayid);
 				Open_Dialog(playerid, TAG_EDIT, sprayid);
 			}
 			else 
 			{
 				SprayData[sprayid][sprayFontB] = 1;
-				Message(playerid, 0xFFFFFFAA, "Successfully edited spray text to normal!");
 
 				ReloadTags(sprayid);
-				SaveTags(sprayid);
+				Streamer_Update(playerid);
 
+				SaveTags(sprayid);
 				Open_Dialog(playerid, TAG_EDIT, sprayid);
 			}
 		}
